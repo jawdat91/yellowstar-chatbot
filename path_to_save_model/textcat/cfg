@@ -1,0 +1,10 @@
+{
+  "labels":[
+    "greeting",
+    "sick",
+    "vacation",
+    "vacation_overview"
+  ],
+  "threshold":0.0,
+  "positive_label":null
+}
