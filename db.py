@@ -1,22 +1,24 @@
-import psycopg2
-from config import DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT
-from datetime import datetime
+import cx_Oracle
+import os
+from dotenv import load_dotenv
+import cx_Oracle
+
+load_dotenv()
 
 class Database:
     @staticmethod
     def get_connection():
         try:
-            conn = psycopg2.connect(
-                host=DB_HOST,
-                dbname=DB_NAME,
-                user=DB_USER,
-                password=DB_PASSWORD,
-                port=DB_PORT
+            conn = cx_Oracle.connect(
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                dsn=os.getenv("DB_DSN")
             )
             return conn
-        except psycopg2.Error as e:
-            print(f"Error connecting to the database: {e}")
+        except cx_Oracle.Error as e:
+            print(f"Error connecting to the Oracle database: {e}")
             return None
+
 
     @staticmethod
     def get_user_by_telegram_id(telegram_id):
@@ -24,11 +26,11 @@ class Database:
         if conn:
             try:
                 cur = conn.cursor()
-                query = 'SELECT id, email FROM users WHERE telegram_id = %s'
+                query = 'SELECT ID, EMAIL_YSS FROM EMPLOYEES WHERE TELEGRAM_ID = :telegram_id'
                 cur.execute(query, (str(telegram_id),))
                 user = cur.fetchone()
                 return user if user else None
-            except psycopg2.Error as e:
+            except cx_Oracle.Error as e:
                 print(f"Error fetching user: {e}")
             finally:
                 conn.close()

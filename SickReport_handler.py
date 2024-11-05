@@ -1,19 +1,21 @@
-import psycopg2
-from datetime import datetime
 from db import Database
+from datetime import datetime
+import cx_Oracle
 
 class SickReport_handler :
     @staticmethod
     def has_already_reported_sick(user_id):
         conn = Database.get_connection()
         if conn:
-            date = datetime.now().strftime("%Y-%m-%d")
+            cur = conn.cursor()
+            query = '''SELECT SEQ FROM SICK_RAPORTS 
+                        WHERE EMPLOYEE_ID = :user_id 
+                        AND STARTDATE = TRUNC(SYSDATE)'''
             try:
-                cur = conn.cursor()
-                cur.execute('SELECT id FROM sick_reports WHERE user_id = %s AND date = %s', (user_id, date))
+                cur.execute(query, [user_id])
                 result = cur.fetchone()
                 return True if result else False
-            except psycopg2.Error as e:
+            except cx_Oracle.Error as e:
                 print(f"Error checking for existing sick report: {e}")
             finally:
                 conn.close()
@@ -23,13 +25,13 @@ class SickReport_handler :
     def save_sick_report(user_id):
         conn = Database.get_connection()
         if conn:
-            date = datetime.now().strftime("%Y-%m-%d")
             try:
                 cur = conn.cursor()
-                cur.execute('INSERT INTO sick_reports (user_id, date, reason) VALUES (%s, %s, %s)', (user_id, date, "Ziek gemeld"))
+                query = '''INSERT INTO SICK_RAPORTS (EMPLOYEE_ID, STARTDATE, DESCRIPTION) 
+                           VALUES (:user_id, TRUNC(SYSDATE), 'Ziek gemeld')'''
+                cur.execute(query, [user_id])
                 conn.commit()
-                cur.close()
-            except psycopg2.Error as e:
+            except cx_Oracle.Error as e:
                 print(f"Error saving the sick report: {e}")
             finally:
                 conn.close()

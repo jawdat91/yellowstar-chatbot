@@ -40,16 +40,16 @@ def telegram_webhook():
                         TelegramBot.send_message(chat_id, "Je hebt je vandaag al ziekgemeld.")
                         print(f"User {user_id} heeft zich al ziekgemeld voor vandaag.")  # Debugging statement
                     else:
-                        # Save sick report.
-                        SickReport_handler.save_sick_report(user_id)
+                        # Ziekmelding opslaan
+                        SickReport_handler.save_sick_report(user_id)  # Save the sick report
                         print(f"Ziekmelding geregistreerd voor gebruiker {user_id}.")  # Debugging statement
                         
-                        # Send success message to user
+                        # Save sick report.
                         TelegramBot.send_message(chat_id, "Je ziekmelding is succesvol ingediend.")
                         
                         # Send an email to HR and the project manager
                         EmailService.send_email_via_smtp(
-                            to_email="jawdat91@outlook.com",  # Het doel e-mailadres
+                            to_email="jawdat91@outlook.com",  # The target email address
                             subject="Ziekmelding medewerker",
                             username=email
                         )
@@ -67,24 +67,30 @@ def telegram_webhook():
         # Check if user is in vacation request process
         elif chat_id in vacation_states:
             state_data = vacation_states[chat_id]
+            print(f"Current state data: {state_data}")  # Debugging statement
             
             print(f"Chat ID: {chat_id}")  # Debugging statement
 
             if state_data['step'] == 'start_date':
                 try:
+                    user_input = user_input.strip()  # Remove spaces
+                    print(f"User input for start date: '{user_input}'")  # Debugging statement
                     start_date = datetime.strptime(user_input, "%d/%m/%Y").date()
+
+                    print(f"start date variable = '{start_date}':. User input: '{user_input}'")
                     
                     # Check if the start date is in the past
                     if start_date < datetime.now().date():
                         TelegramBot.send_message(chat_id, "De startdatum kan niet in het verleden liggen. Voer opnieuw een geldige startdatum in (DD/MM/YYYY).")
-                    elif Vacation_handler.has_overlapping_vacation(state_data['user_id'], start_date, start_date):  # Check of startdatum overlapt
+                    elif Vacation_handler.has_overlapping_vacation(state_data['user_id'], start_date, start_date):  # Check if the start date overlaps
                         TelegramBot.send_message(chat_id, "De startdatum valt binnen een bestaande vakantie. Voer een andere startdatum in (DD/MM/YYYY).")
                     else:
-                        # Save the start date
+                        # # Save the start date
                         state_data['start_date'] = start_date
-                        state_data['step'] = 'end_date'  # Ga naar volgende stap
+                        state_data['step'] = 'end_date'  
                         TelegramBot.send_message(chat_id, "Wat is de laatste datum van je vakantie tot en met? Voer de datum in DD/MM/YYYY.")
-                except ValueError:
+                except ValueError as e:
+                    print(f"ValueError: {e}, User input: '{user_input}'")  # Debugging statement
                     TelegramBot.send_message(chat_id, "Ongeldige datum. Voer de datum in het formaat DD/MM/YYYY.")
 
             elif state_data['step'] == 'end_date':
@@ -96,7 +102,7 @@ def telegram_webhook():
                         TelegramBot.send_message(chat_id, "Er is geen geldige startdatum gevonden. Begin opnieuw met je vakantieaanvraag.")
                     elif end_date < start_date:
                         TelegramBot.send_message(chat_id, "De einddatum kan niet vóór de startdatum liggen. Voer een geldige einddatum in.")
-                    elif Vacation_handler.has_overlapping_vacation(state_data['user_id'], start_date, end_date):  # Check of einddatum overlapt
+                    elif Vacation_handler.has_overlapping_vacation(state_data['user_id'], start_date, end_date):  # Check if the end date overlaps
                         TelegramBot.send_message(chat_id, "De einddatum valt binnen een bestaande vakantie. Voer een andere einddatum in (DD/MM/YYYY).")
                     else:
                         state_data['end_date'] = end_date
@@ -152,15 +158,10 @@ def telegram_webhook():
         elif intent == "vacation_overview":
             if user:
                 user_id, email = user
-                vacation_days = Vacation_handler.get_vacation_days(user_id)  # Fetch vacation days from the database
-                
-                if vacation_days:
-                    overview_message = "Hier is een overzicht van je vakantiedagen:\n"
-                    for start_date, end_date in vacation_days:
-                        overview_message += f"Van {start_date} tot {end_date}\n"
-                else:
-                    overview_message = "Je hebt momenteel geen geregistreerde vakantiedagen."
-                    
+                overview_message = Vacation_handler.get_vacation_overview(user_id)
+                print(overview_message)
+
+                        
                 TelegramBot.send_message(chat_id, overview_message)
             else:
                 TelegramBot.send_message(chat_id, "Je bent niet geregistreerd. Neem contact op met de administratie.")
