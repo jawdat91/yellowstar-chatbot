@@ -33,7 +33,7 @@ def telegram_webhook():
                 user_id = confirmation_states[chat_id]  # Get the stored user_id
                 user = Database.get_user_by_telegram_id(chat_id)  # Retrieve user info again
                 if user:
-                    user_id, email = user  # Ensure email is defined
+                    user_id, user_name = user  
 
                     # Check if the user has already reported sick
                     if SickReport_handler.has_already_reported_sick(user_id):
@@ -49,11 +49,18 @@ def telegram_webhook():
                         
                         # Send an email to HR and the project manager
                         EmailService.send_email_via_smtp(
-                            to_email="jawdat91@outlook.com",  # The target email address
-                            subject="Ziekmelding medewerker",
-                            username=email
+                            user_id,
+                            username= user_name
                         )
                         print(f"E-mail verzonden naar HR voor gebruiker {user_id}.")  # Debugging statement
+
+
+                        # EmailService.send_email_via_smtp(
+                        #     to_email="jawdat91@outlook.com",  # Het doel e-mailadres
+                        #     subject="Ziekmelding medewerker",
+                        #     username=email
+                        # )
+                        # print(f"E-mail verzonden naar HR voor gebruiker {user_id}.")  # Debugging statement
             elif user_input == "nee":
                     TelegramBot.send_message(chat_id, "Ziekmelding is geannuleerd.")
             else:
@@ -73,7 +80,7 @@ def telegram_webhook():
 
             if state_data['step'] == 'start_date':
                 try:
-                    user_input = user_input.strip()  # Remove spaces
+                    user_input = user_input.strip()  # Vedrwijder spaties
                     print(f"User input for start date: '{user_input}'")  # Debugging statement
                     start_date = datetime.strptime(user_input, "%d/%m/%Y").date()
 
@@ -82,12 +89,12 @@ def telegram_webhook():
                     # Check if the start date is in the past
                     if start_date < datetime.now().date():
                         TelegramBot.send_message(chat_id, "De startdatum kan niet in het verleden liggen. Voer opnieuw een geldige startdatum in (DD/MM/YYYY).")
-                    elif Vacation_handler.has_overlapping_vacation(state_data['user_id'], start_date, start_date):  # Check if the start date overlaps
+                    elif Vacation_handler.has_overlapping_vacation(state_data['user_id'], start_date, start_date):  # Check of startdatum overlapt
                         TelegramBot.send_message(chat_id, "De startdatum valt binnen een bestaande vakantie. Voer een andere startdatum in (DD/MM/YYYY).")
                     else:
                         # # Save the start date
                         state_data['start_date'] = start_date
-                        state_data['step'] = 'end_date'  
+                        state_data['step'] = 'end_date'  # Ga naar volgende stap
                         TelegramBot.send_message(chat_id, "Wat is de laatste datum van je vakantie tot en met? Voer de datum in DD/MM/YYYY.")
                 except ValueError as e:
                     print(f"ValueError: {e}, User input: '{user_input}'")  # Debugging statement
@@ -125,7 +132,7 @@ def telegram_webhook():
                 vacation_states.pop(chat_id, None)
             return "ok", 200
 
-        # Get user by Telegram ID (returns both user_id and email)
+        # Get user by Telegram ID (returns both user_id and user_name)
         user = Database.get_user_by_telegram_id(chat_id)
 
         # Analyze the user's input for intent
@@ -136,20 +143,20 @@ def telegram_webhook():
 
         elif intent == "sick":
             if user:
-                user_id, email = user  # Unpack the returned user tuple
+                user_id, user_name = user  # Unpack the returned user tuple
                 if SickReport_handler.has_already_reported_sick(user_id):
                     TelegramBot.send_message(chat_id, "Je hebt je vandaag al ziekgemeld.")
                 else:
                     # Ask for confirmation
                     confirmation_states[chat_id] = user_id  # Store user_id and set confirmation state
-                    TelegramBot.send_message(chat_id, f"Wil je je ziekmelden ({email})? Antwoord met 'ja' of 'nee'.")
+                    TelegramBot.send_message(chat_id, f"Wil je je ziekmelden ({user_name})? Antwoord met 'ja' of 'nee'.")
             else:
                 TelegramBot.send_message(chat_id, "Je bent niet geregistreerd. Neem contact op met de administratie.")
 
         
         elif intent == "vacation":
             if user:
-                user_id, email = user
+                user_id, user_name = user
                 vacation_states[chat_id] = {'user_id': user_id, 'step': 'start_date'}
                 TelegramBot.send_message(chat_id, "Voer de datum van het begin van je vakantie in (DD/MM/YYYY).")
             else:
@@ -157,7 +164,7 @@ def telegram_webhook():
 
         elif intent == "vacation_overview":
             if user:
-                user_id, email = user
+                user_id, user_name = user
                 overview_message = Vacation_handler.get_vacation_overview(user_id)
                 print(overview_message)
 
