@@ -68,12 +68,7 @@ class Vacation_handler:
 
     @staticmethod
     def get_vacation_overview(employee_id):
-        """
-        Haalt een overzicht van de vakantiedagen voor een gegeven werknemer op en retourneert een geformatteerde string.
-        
-        :param employee_id: Het ID van de werknemer
-        :return: Een string met het overzicht van vakantiedagen en details
-        """
+
         conn = Database.get_connection()
         if conn:
             try:

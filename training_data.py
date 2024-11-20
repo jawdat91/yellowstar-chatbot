@@ -48,9 +48,6 @@ TRAINING_DATA = [
     ("goedenavond", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
     ("dag", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
     ("mijn dag is goed", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
-
-    # ("dag", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
-
     ("goeiedag", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
     ("goedemiddag", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
     ("hey", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
@@ -105,7 +102,6 @@ TRAINING_DATA = [
     # Vacation Intent
     ("ik wil verlof aanvragen", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
     ("ik wil mijn verlof aanvragen", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
-
     ("kan ik vakantie aanvragen?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
     ("ik wil op vakantie", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
     ("hoe vraag ik verlof aan?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
@@ -143,42 +139,44 @@ TRAINING_DATA = [
 
 
 
-import spacy
-from spacy.pipeline.textcat import Config
-from spacy.training import Example
-import random
-from spacy.util import minibatch, compounding
 
 
-# Load or create a blank dutch model
-nlp = spacy.blank("nl") 
-
-# Add the textcat component to the pipeline without specifying a model
-text_cat = nlp.add_pipe("textcat", last=True)
-
-# Add labels to the text classifier
-text_cat.add_label("greeting")
-text_cat.add_label("sick")
-text_cat.add_label("vacation")
-text_cat.add_label("vacation_overview")
-
-# Convert the training data into the right format for spaCy
-train_examples = []
-for text, annotations in TRAINING_DATA:
-    doc = nlp.make_doc(text)
-    example = Example.from_dict(doc, annotations)
-    train_examples.append(example)
-
-# Train the model
-nlp.begin_training()
-for epoch in range(70):  # Adjust the number of epochs as needed
-    losses = {}
-    # Create minibatches
-    random.shuffle(train_examples)  # Shuffle examples before creating minibatches
-    for batch in minibatch(train_examples, size=compounding(8.0, 128.0, 0.7)):  # Use compounding to define batch sizes
-        nlp.update(batch, drop= 0.3, losses=losses)  # Update the model with the batch
-
-    print(f"Epoch {epoch}: Losses {losses}")
-
-# Save the trained model
-nlp.to_disk("path_to_save_model")  # the path of the model 
+#Define the testing data
+TEST_DATA = [
+    # Greeting Intent 
+    ("hoe gaat het?", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    ("heey", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    ("hallo allemaal", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    ("hallo, hoe gaat het?", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    ("wat leuk om je te zien", {"cats": {"greeting": 1.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    
+    # Sick Intent
+    ("ik ben niet lekker, ik denk dat ik ziek ben", {"cats": {"greeting": 0.0, "sick": 1.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    ("mijn hoofd doet pijn, ik voel me niet goed", {"cats": {"greeting": 0.0, "sick": 1.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    ("ik heb spierpijn, ik ben ziek", {"cats": {"greeting": 0.0, "sick": 1.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    ("ik voel me zwak en moe, ik moet rusten", {"cats": {"greeting": 0.0, "sick": 1.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    ("ik ben verkouden en voel me slecht", {"cats": {"greeting": 0.0, "sick": 1.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    
+    # Vacation Intent
+    ("kan ik mijn vakantiedagen aanvragen?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
+    ("hoe vraag ik vakantie aan?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
+    ("ik wil verlof aanvragen voor volgende maand", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
+    ("wanneer kan ik vakantie aanvragen?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
+    ("ik wil een verlofaanvraag indienen voor deze zomer", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
+    
+    # Random Intent
+    ("hoeveel vakantie dagen staan er open?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 1.0}}),
+    ("heeft de vakantie aanvraag gewerkt?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 1.0}}),
+    ("ik wil een overzicht van mijn vakantie", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 1.0}}),
+    ("kan ik mijn verlof aanvragen voor morgen?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
+    ("ik wil weten hoeveel dagen vakantie ik nog heb", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 1.0}}),
+    ("hoeveel vrije dagen heb ik nog?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 1.0}}),
+    ("wat zijn de regels voor het aanvragen van verlof?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
+    ("ik ben niet lekker", {"cats": {"greeting": 0.0, "sick": 1.0, "vacation": 0.0, "vacation_overview": 0.0}}),
+    ("hoe vraag ik een vakantie aan?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 1.0, "vacation_overview": 0.0}}),
+    ("wat is het overzicht van mijn vakantie?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 1.0}}),
+    ("hoeveel vakantiedagen heb ik dit jaar opgenomen?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 1.0}}),
+    ("kan ik mijn vakantiedagen opvragen?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 1.0}}),
+    ("heb ik nog vakantiedagen openstaan?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 1.0}}),
+    ("hoeveel vakantiedagen heb ik vorig jaar gehad?", {"cats": {"greeting": 0.0, "sick": 0.0, "vacation": 0.0, "vacation_overview": 1.0}}),    
+]
