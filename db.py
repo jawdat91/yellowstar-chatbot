@@ -1,18 +1,17 @@
 import cx_Oracle
 import os
-from dotenv import load_dotenv
 import cx_Oracle
+from config import DB_USER, DB_PASSWORD,DSN
 
-load_dotenv()
 
 class Database:
     @staticmethod
     def get_connection():
         try:
             conn = cx_Oracle.connect(
-                user=os.getenv("DB_USER"),
-                password=os.getenv("DB_PASSWORD"),
-                dsn=os.getenv("DB_DSN")
+                user=DB_USER,
+                password=DB_PASSWORD,
+                dsn=DSN
             )
             return conn
         except cx_Oracle.Error as e:

@@ -1,4 +1,3 @@
-# from config import DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT
 from datetime import datetime
 from db import Database
 import cx_Oracle

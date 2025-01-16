@@ -88,7 +88,7 @@ def telegram_webhook():
                     else:
                         # # Save the start date
                         state_data['start_date'] = start_date
-                        state_data['step'] = 'end_date'  # Ga naar volgende stap
+                        state_data['step'] = 'end_date' 
                         TelegramBot.send_message(chat_id, "Wat is de laatste datum van je vakantie tot en met? Voer de datum in DD/MM/YYYY.")
                 except ValueError as e:
                     print(f"ValueError: {e}, User input: '{user_input}'")  # Debugging statement

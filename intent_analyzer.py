@@ -4,7 +4,6 @@ import spacy
 # Load the trained model from the path
 nlp = spacy.load("path_to_save_model") 
 
-
 class IntentAnalyzer:
     def analyze_intent(text):
         doc = nlp(text.lower())  # Use the loaded trained model

@@ -82,7 +82,7 @@ class EmailService:
 
             try:
                 # Send email via SMTP
-                server = smtplib.SMTP(SENDGRID_SMTP_SERVER, SENDGRID_SMTP_PORT,)  # Add a timeout.
+                server = smtplib.SMTP(SENDGRID_SMTP_SERVER, SENDGRID_SMTP_PORT,)  
                 server.starttls()
                 server.login(SENDGRID_USERNAME, SENDGRID_API_KEY)
                 server.sendmail(from_email, [hr_email, manager_email], msg.as_string())
