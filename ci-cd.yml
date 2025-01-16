@@ -1,0 +1,62 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - development  # Trigger bij pushes naar de development branch
+
+jobs:
+  # Job om unit tests en integratietests uit te voeren in de development branch
+  test-development:
+    if: github.ref == 'refs/heads/development'  # Alleen uitvoeren voor de development branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js (pas aan voor jouw stack)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      # Unit tests uitvoeren
+      - name: Run unit tests
+        run: npm run test:unit.test.py  
+
+      # Integratie tests uitvoeren
+      - name: Run integration tests
+        run: npm run test:integratie_test.py  # 
+  # Job om de code naar de `test` branch te pushen (staging)
+  push-to-test:
+    needs: test-development  # deze job alleen draait als de tests in development geslaagd zijn
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/development'  # Alleen uitvoeren voor de `development` branch
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Push to test branch
+        run: |
+          git checkout test
+          git merge development
+          git push origin test  # Dit pusht naar de test branch
+
+  # Job om naar productie te deployen, na succesvolle tests in de `test` branch
+  deploy-to-production:
+    needs: push-to-test  # Zorgt ervoor dat deze job alleen draait als de code succesvol naar test is gepusht
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/test'  # Alleen uitvoeren voor de `test` branch
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Hier kun je je deploy script toevoegen
+      - name: Deploy to production
+        run: |
+          echo "Deploy naar productie..."
