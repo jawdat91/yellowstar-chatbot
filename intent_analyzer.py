@@ -1,7 +1,7 @@
 import spacy
 
 
-# Laad het getrainde model vanaf de schijf
+# Load the trained model from the path
 nlp = spacy.load("path_to_save_model") 
 
 

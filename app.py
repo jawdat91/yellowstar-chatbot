@@ -55,12 +55,6 @@ def telegram_webhook():
                         print(f"E-mail verzonden naar HR voor gebruiker {user_id}.")  # Debugging statement
 
 
-                        # EmailService.send_email_via_smtp(
-                        #     to_email="jawdat91@outlook.com",  # Het doel e-mailadres
-                        #     subject="Ziekmelding medewerker",
-                        #     username=email
-                        # )
-                        # print(f"E-mail verzonden naar HR voor gebruiker {user_id}.")  # Debugging statement
             elif user_input == "nee":
                     TelegramBot.send_message(chat_id, "Ziekmelding is geannuleerd.")
             else:
